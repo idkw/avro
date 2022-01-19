@@ -97,6 +97,14 @@ public class TestReadingWritingDataInEvolvedSchemas {
       .fields() //
       .name(FIELD_A).type().enumeration("Enum1").symbols("A", "B", "C").noDefault() //
       .endRecord();
+  private static final Schema ENUM_AB_RECORD_DEFAULT_A = SchemaBuilder.record(RECORD_A) //
+    .fields() //
+    .name(FIELD_A).type().enumeration("Enum1").symbols("A", "B").enumDefault("A") //
+    .endRecord();
+  private static final Schema ENUM_ABC_RECORD_DEFAULT_A = SchemaBuilder.record(RECORD_A) //
+    .fields() //
+    .name(FIELD_A).type().enumeration("Enum1").symbols("A", "B", "C").enumDefault("A") //
+    .endRecord();
   private static final Schema UNION_INT_RECORD = SchemaBuilder.record(RECORD_A) //
       .fields() //
       .name(FIELD_A).type().unionOf().intType().endUnion().noDefault() //
@@ -333,6 +341,16 @@ public class TestReadingWritingDataInEvolvedSchemas {
     Record record = defaultRecordWithSchema(writer, FIELD_A, new EnumSymbol(writer, "C"));
     byte[] encoded = encodeGenericBlob(record);
     decodeGenericBlob(ENUM_AB_RECORD, writer, encoded);
+  }
+
+  @Test
+  public void enumRecordWithExtendedSchemaCanBeReadIfNewValuesAreUsedUsingDefault() throws Exception {
+    Schema readerSchemaV1 = ENUM_AB_RECORD_DEFAULT_A;
+    Schema writerSchemaV2 = ENUM_ABC_RECORD_DEFAULT_A;
+    Record record = defaultRecordWithSchema(writerSchemaV2, FIELD_A, new EnumSymbol(writerSchemaV2, "C"));
+    byte[] encoded = encodeGenericBlob(record);
+    Record decodedRecord = decodeGenericBlob(readerSchemaV1, writerSchemaV2, encoded);
+    Assert.assertEquals("A", decodedRecord.get(FIELD_A).toString());
   }
 
   @Test
